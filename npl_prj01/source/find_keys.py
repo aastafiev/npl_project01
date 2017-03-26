@@ -22,11 +22,6 @@ import re
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import urllib2
-from unidecode import unidecode
-
-
-def remove_non_ascii(text):
-    return unidecode(unicode(text, encoding="utf-8"))
 
 
 def url2domain(url):
@@ -47,7 +42,7 @@ def get_meta_content(html):
     soup = BeautifulSoup(html, "lxml")
     for tag in soup.find_all("meta"):
         if tag.has_attr("name") and tag["name"].lower() in st.META_NAMES and tag["content"].strip():
-            out.append(remove_non_ascii(tag["content"].strip()))
+            out.append(tag["content"].strip())
     return out
 
 
