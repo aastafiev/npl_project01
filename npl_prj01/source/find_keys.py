@@ -46,7 +46,7 @@ def get_meta_content(html):
     return out
 
 
-def get_all_meta_content(urls_ts):
+def get_all_meta_content(urls_ts, count):
     out = list()
     lost_urls = list()
     domain_url = list()
@@ -55,13 +55,14 @@ def get_all_meta_content(urls_ts):
 
     for (url, timestamp) in urls_ts:
         try:
+            count += 1
             domain, url_scheme = url2domain(url)
             domain_url.extend([(domain, url, timestamp)])
             url_new = '://'.join([url_scheme, domain])
             if url_new not in buffer_urls:
                 # Сначала по домену
                 buffer_urls.extend([url_new])
-                print "Trying NEW URL %s" % url_new
+                print "%d: Trying NEW URL %s" % (count, url_new)
                 response = urllib2.urlopen(url_new)
                 meta_info = get_meta_content(response)
                 if meta_info:
@@ -74,7 +75,7 @@ def get_all_meta_content(urls_ts):
             if url not in buffer_urls:
                 # Теперь по основной ссылке
                 buffer_urls.extend([url])
-                print "Trying %s" % url
+                print "%d: Trying %s" % (count, url)
                 response = urllib2.urlopen(url)
                 meta_info = get_meta_content(response)
                 if meta_info:
@@ -89,7 +90,7 @@ def get_all_meta_content(urls_ts):
         except Exception:
             lost_urls.extend([(url, 'bad_url')])
             print "Bad url"
-    return list(set(out)), domain_url, lost_urls
+    return list(set(out)), domain_url, lost_urls, count
 
 
 def parse_to_files(nrows=None):
@@ -100,6 +101,7 @@ def parse_to_files(nrows=None):
     with open(st.UID_META_FILE_PATH, 'w') as um_file,\
             open(st.UID_LOST_URLS_FILE_PATH, 'w') as lu_file,\
             open(st.UID_DOMAIN_URL_TIMESTAMP_FILE_PATH, 'w') as dut_file:
+        count = 0
         for row in df.itertuples():
             uid = row[1]
             uid_visits = json.loads(row[2])
@@ -108,7 +110,7 @@ def parse_to_files(nrows=None):
                 urls_ts.extend([(v['url'], timestamp)])
 
             print "\nUser %s\n------------------" % uid
-            meta_data, domains_urls, lost_urls = get_all_meta_content(urls_ts)
+            meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count)
             for md in meta_data:
                 um_file.write("%s\t%s\n" % (uid, md.encode('utf-8')))
             for (dom, url, ts) in domains_urls:
@@ -118,7 +120,7 @@ def parse_to_files(nrows=None):
 
 
 def main():
-    parse_to_files(1)
+    parse_to_files(2)
 
 
 if __name__ == "__main__":
