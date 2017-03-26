@@ -22,6 +22,11 @@ import re
 from urlparse import urlparse
 from bs4 import BeautifulSoup
 import urllib2
+from unidecode import unidecode
+
+
+def remove_non_ascii(text):
+    return unidecode(unicode(text, encoding="utf-8"))
 
 
 def url2domain(url):
@@ -42,7 +47,7 @@ def get_meta_content(html):
     soup = BeautifulSoup(html, "lxml")
     for tag in soup.find_all("meta"):
         if tag.has_attr("name") and tag["name"].lower() in st.META_NAMES and tag["content"].strip():
-            out.append(tag["content"])
+            out.append(remove_non_ascii(tag["content"].strip()))
     return out
 
 
@@ -112,7 +117,7 @@ def parse_to_files(nrows=None):
             print "\nUser %s\n------------------" % uid
             meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count)
             for md in meta_data:
-                um_file.write("%s\t%s\n" % (uid, md.encode('utf-8')))
+                um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8').split())))
             for (dom, url, ts) in domains_urls:
                 dut_file.write("%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8'), url.encode('utf-8'), ts))
             for (url, err) in lost_urls:
