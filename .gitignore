@@ -1,20 +1,10 @@
 # Created by .ignore support plugin (hsz.mobi)
 .DS_Store
-.gitignore
 .idea/
 npl_prj01/.DS_Store
 npl_prj01/data/
-npl_prj01/lib/python2.7/UserDict.pyc
-npl_prj01/lib/python2.7/_abcoll.pyc
-npl_prj01/lib/python2.7/_weakrefset.pyc
-npl_prj01/lib/python2.7/abc.pyc
-npl_prj01/lib/python2.7/codecs.pyc
-npl_prj01/lib/python2.7/copy_reg.pyc
-npl_prj01/lib/python2.7/genericpath.pyc
-npl_prj01/lib/python2.7/linecache.pyc
-npl_prj01/lib/python2.7/os.pyc
-npl_prj01/lib/python2.7/posixpath.pyc
-npl_prj01/lib/python2.7/site.pyc
-npl_prj01/lib/python2.7/stat.pyc
-npl_prj01/lib/python2.7/types.pyc
-npl_prj01/lib/python2.7/warnings.pyc
+npl_prj01/bin
+npl_prj01/include
+npl_prj01/lib
+npl_prj01/share
+npl_prj01/pip-selfcheck.json

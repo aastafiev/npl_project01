@@ -120,7 +120,7 @@ def parse_to_files(nrows=None):
 
 
 def main():
-    parse_to_files(2)
+    parse_to_files()
 
 
 if __name__ == "__main__":
