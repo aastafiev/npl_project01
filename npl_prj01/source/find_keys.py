@@ -112,11 +112,13 @@ def parse_to_files(nrows=None):
             print "\nUser %s\n------------------" % uid
             meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count)
             for md in meta_data:
-                um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8').split())))
+                um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8', 'ignore').split())))
             for (dom, url, ts) in domains_urls:
-                dut_file.write("%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8'), url.encode('utf-8'), ts))
+                dut_file.write("%s\t%s\t%s\t%s\n" %
+                               (uid, dom.encode('utf-8', 'xmlcharrefreplace'),
+                                url.encode('utf-8', 'xmlcharrefreplace'), ts))
             for (url, err) in lost_urls:
-                lu_file.write("%s\t%s\t%s\n" % (uid, url.encode('utf-8'), err))
+                lu_file.write("%s\t%s\t%s\n" % (uid, url.encode('utf-8', 'xmlcharrefreplace'), err))
 
 
 def main():
