@@ -96,13 +96,13 @@ def get_all_meta_content(urls_ts, count):
 def parse_to_files(nrows=None):
     fields = ['uid', 'user_json']
     df = pd.read_csv(st.MAIN_FILE_PATH, sep='\t', skipinitialspace=True, usecols=fields, nrows=nrows)
-    urls_ts = list()
 
     with open(st.UID_META_FILE_PATH, 'w') as um_file,\
             open(st.UID_LOST_URLS_FILE_PATH, 'w') as lu_file,\
             open(st.UID_DOMAIN_URL_TIMESTAMP_FILE_PATH, 'w') as dut_file:
         count = 0
         for row in df.itertuples():
+            urls_ts = list()
             uid = row[1]
             uid_visits = json.loads(row[2])
             for v in uid_visits['visits']:
