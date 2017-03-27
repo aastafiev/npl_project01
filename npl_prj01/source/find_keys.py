@@ -39,7 +39,7 @@ def url2domain(url):
     netloc = re.search("(?:www\.)?(.*)", parsed_url.netloc).group(1)
 
     if netloc is not None:
-        return str(netloc.encode('utf8')).strip(), parsed_url.scheme
+        return netloc.strip(), parsed_url.scheme
 
 
 def get_meta_content(html):
@@ -59,7 +59,7 @@ def get_all_meta_content(urls_ts, count, timeout=None):
     for url, timestamp in urls_ts:
         domain, url_scheme = url2domain(url)
         domain_url.extend([(domain, url, timestamp)])
-        new_url = '://'.join([url_scheme.decode('utf-8'), domain.decode('utf-8')])
+        new_url = u'://'.join([url_scheme, domain])
         if not url in urls:
             urls.append(url)
         if not new_url in urls:
@@ -90,8 +90,13 @@ def parse_to_files(in_file_path,
                    lost_urls_file_path,
                    timeout=None,
                    nrows=None):
-    fields = ['uid', 'user_json']
-    df = pd.read_csv(in_file_path, sep='\t', skipinitialspace=True, usecols=fields, nrows=nrows)
+    df = pd.read_csv(in_file_path,
+                     encoding='utf-8',
+                     sep='\t',
+                     skipinitialspace=True,
+                     usecols=['uid', 'user_json'],
+                     nrows=nrows,
+    )
 
     with open(meta_file_path, 'w') as um_file, \
             open(lost_urls_file_path, 'w') as lu_file, \
@@ -105,12 +110,11 @@ def parse_to_files(in_file_path,
             meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count, timeout)
 
             for md in meta_data:
-                um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8', 'ignore').split())))
+                um_file.write((u'%s\t%s\n' % (uid, u' '.join(md.split()))).encode('utf-8'))
             for (dom, url, ts) in domains_urls:
-                dut_file.write(
-                    "%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8', 'ignore'), url.encode('utf-8', 'ignore'), ts))
+                dut_file.write((u'%s\t%s\t%s\t%s\n' % (uid, dom, url, ts)).encode('utf-8'))
             for (url, err) in lost_urls:
-                lu_file.write("%s\t%s\t%s\n" % (uid, url.encode('utf-8', 'xmlcharrefreplace'), err))
+                lu_file.write((u'%s\t%s\t%s\n' % (uid, url, err)).encode('utf-8'))
 
 
 if __name__ == "__main__":
