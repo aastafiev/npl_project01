@@ -11,7 +11,7 @@
 
 
 import re
-import sys
+# import sys
 import json
 import urllib2
 import argparse
@@ -20,7 +20,6 @@ import grequests
 import pandas as pd
 from urlparse import urlparse
 from bs4 import BeautifulSoup
-
 
 META_NAMES = ['description',
               'og:description',
@@ -75,13 +74,13 @@ def get_all_meta_content(urls_ts, count, timeout=None):
             meta_info = get_meta_content(response._content)
             if meta_info:
                 out.extend(meta_info)
-                print "%s:\tGot meta:\t%s" % (count, urls[i])
+                print "%s:\tGot meta\t%s" % (count, urls[i])
             else:
                 lost_urls.append((url, 'empty_meta'))
-                print "%s:\tEmpty meta:\t%s" % (count, urls[i])
+                print "%s\tEmpty meta\t%s" % (count, urls[i])
         except Exception as ex:
-            lost_urls.append((url, 'empty_meta'))
-            print '%d:\tERROR:\t%s - %s' % (count, urls[i], ex)
+            lost_urls.append((url, 'bad_url'))
+            print '%d\tERROR:\t%s - %s' % (count, urls[i], ex)
     return list(set(out)), domain_url, lost_urls, count
 
 
@@ -94,9 +93,9 @@ def parse_to_files(in_file_path,
     fields = ['uid', 'user_json']
     df = pd.read_csv(in_file_path, sep='\t', skipinitialspace=True, usecols=fields, nrows=nrows)
 
-    with open(meta_file_path, 'w') as um_file,\
-         open(lost_urls_file_path, 'w') as lu_file,\
-         open(domain_urls_timestamp_file_path, 'w') as dut_file:
+    with open(meta_file_path, 'w') as um_file, \
+            open(lost_urls_file_path, 'w') as lu_file, \
+            open(domain_urls_timestamp_file_path, 'w') as dut_file:
         count = 0
         for _, uid, user_json in df.itertuples():
             print "\nUser %s\n------------------" % uid
@@ -108,8 +107,7 @@ def parse_to_files(in_file_path,
             for md in meta_data:
                 um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8', 'ignore').split())))
             for (dom, url, ts) in domains_urls:
-                dut_file.write("%s\t%s\t%s\t%s\n" %
-                    (uid, dom.encode('utf-8', 'xmlcharrefreplace'), url.encode('utf-8', 'xmlcharrefreplace'), ts))
+                dut_file.write("%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8', 'ignore'), url.encode('utf-8', 'ignore'), ts))
             for (url, err) in lost_urls:
                 lu_file.write("%s\t%s\t%s\n" % (uid, url.encode('utf-8', 'xmlcharrefreplace'), err))
 
