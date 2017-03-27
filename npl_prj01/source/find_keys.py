@@ -56,7 +56,7 @@ def get_meta_content(html):
             if tag["content"].strip()]
 
 
-def get_all_meta_content(urls_ts, count, timeout=None):
+def get_all_meta_content(urls_ts, count, requests_count=128, timeout=None):
     out = []
     lost_urls = []
     domain_url = []
@@ -71,22 +71,24 @@ def get_all_meta_content(urls_ts, count, timeout=None):
         if not new_url in urls:
             urls.append(new_url)
 
-    requests = (grequests.get(u) for u in urls)
-    responses = grequests.map(requests=requests, gtimeout=timeout)
+    for _urls in (urls[i:i+requests_count] for i in xrange(0, len(urls), requests_count)):
+        requests = (grequests.get(u) for u in _urls)
+        responses = grequests.map(requests=requests, gtimeout=timeout)
 
-    for i, response in enumerate(responses):
-        try:
-            count += 1
-            meta_info = get_meta_content(response._content)
-            if meta_info:
-                out.extend(meta_info)
-                print "%s\tGot meta\t%s" % (count, urls[i])
-            else:
-                lost_urls.append((urls[i], 'empty_meta'))
-                print "%s\tEmpty meta\t%s" % (count, urls[i])
-        except Exception as ex:
-            lost_urls.append((urls[i], 'bad_url'))
-            print '%d\tERROR:\t%s - %s' % (count, urls[i], ex)
+        for i, response in enumerate(responses):
+            try:
+                count += 1
+                meta_info = get_meta_content(response._content)
+                response.close()
+                if meta_info:
+                    out.extend(meta_info)
+                    print "%s\tGot meta\t%s" % (count, _urls[i])
+                else:
+                    lost_urls.append((_urls[i], 'empty_meta'))
+                    print "%s\tEmpty meta\t%s" % (count, _urls[i])
+            except Exception as ex:
+                lost_urls.append((_urls[i], 'bad_url'))
+                print '%d\tERROR:\t%s - %s' % (count, _urls[i], ex)
     return list(set(out)), domain_url, lost_urls, count
 
 
@@ -94,6 +96,7 @@ def parse_to_files(in_file_path,
                    meta_file_path,
                    domain_urls_timestamp_file_path,
                    lost_urls_file_path,
+                   requests_count=128,
                    timeout=None,
                    nrows=None):
     df = pd.read_csv(in_file_path,
@@ -115,7 +118,12 @@ def parse_to_files(in_file_path,
             user_json = json.loads(user_json)
             urls_ts = [(v['url'], v['timestamp']) for v in user_json['visits']]
             step_time = datetime.now()
-            meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count, timeout)
+            meta_data, domains_urls, lost_urls, count = get_all_meta_content(
+                urls_ts,
+                count,
+                requests_count,
+                timeout
+            )
             print_time_deltas(datetime.now(), step_time, start_time)
 
             for md in meta_data:
@@ -144,6 +152,10 @@ if __name__ == "__main__":
                             type=int,
                             default=None,
                             help='rows count to get from in file')
+    arg_parser.add_argument('--requests-count',
+                            type=int,
+                            default=128,
+                            help='requests count per pool')
     arg_parser.add_argument('--timeout',
                             type=int,
                             default=None,
