@@ -3,7 +3,7 @@
 
 # SEP = '\t'
 DATA_DIR = '../data'
-MAIN_FILENAME = 'gender_age_dataset.txt'
+MAIN_FILENAME = 'gender_age_dataset1.txt'
 UID_META_FILENAME = 'uid_meta.txt'
 UID_DOMAIN_URL_TIMESTAMP_FILENAME = 'uid_domain_url_timestamp.txt'
 UID_LOST_URLS_FILENAME = 'uid_lost_url.txt'

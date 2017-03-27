@@ -76,10 +76,10 @@ def get_all_meta_content(urls_ts, count, timeout=None):
                 out.extend(meta_info)
                 print "%s:\tGot meta\t%s" % (count, urls[i])
             else:
-                lost_urls.append((url, 'empty_meta'))
+                lost_urls.append((urls[i], 'empty_meta'))
                 print "%s\tEmpty meta\t%s" % (count, urls[i])
         except Exception as ex:
-            lost_urls.append((url, 'bad_url'))
+            lost_urls.append((urls[i], 'bad_url'))
             print '%d\tERROR:\t%s - %s' % (count, urls[i], ex)
     return list(set(out)), domain_url, lost_urls, count
 
@@ -107,7 +107,8 @@ def parse_to_files(in_file_path,
             for md in meta_data:
                 um_file.write("%s\t%s\n" % (uid, ' '.join(md.encode('utf-8', 'ignore').split())))
             for (dom, url, ts) in domains_urls:
-                dut_file.write("%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8', 'ignore'), url.encode('utf-8', 'ignore'), ts))
+                dut_file.write(
+                    "%s\t%s\t%s\t%s\n" % (uid, dom.encode('utf-8', 'ignore'), url.encode('utf-8', 'ignore'), ts))
             for (url, err) in lost_urls:
                 lu_file.write("%s\t%s\t%s\n" % (uid, url.encode('utf-8', 'xmlcharrefreplace'), err))
 
