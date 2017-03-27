@@ -11,7 +11,6 @@
 
 
 import re
-# import sys
 import json
 import urllib2
 import argparse
@@ -20,6 +19,8 @@ import grequests
 import pandas as pd
 from urlparse import urlparse
 from bs4 import BeautifulSoup
+from datetime import datetime
+
 
 META_NAMES = ['description',
               'og:description',
@@ -28,6 +29,11 @@ META_NAMES = ['description',
               'title',
               'og:title',
               'twitter:title']
+
+
+def print_time_deltas(now, step_time, start_time):
+    l = 'step duration: %s, delta from start: %s' % (now - step_time, now - start_time)
+    print '\n'.join(('-' * len(l), l, '-' * len(l)))
 
 
 def url2domain(url):
@@ -97,6 +103,7 @@ def parse_to_files(in_file_path,
                      usecols=['uid', 'user_json'],
                      nrows=nrows,
     )
+    start_time = datetime.now()
 
     with open(meta_file_path, 'w') as um_file, \
             open(lost_urls_file_path, 'w') as lu_file, \
@@ -107,7 +114,9 @@ def parse_to_files(in_file_path,
 
             user_json = json.loads(user_json)
             urls_ts = [(v['url'], v['timestamp']) for v in user_json['visits']]
+            step_time = datetime.now()
             meta_data, domains_urls, lost_urls, count = get_all_meta_content(urls_ts, count, timeout)
+            print_time_deltas(datetime.now(), step_time, start_time)
 
             for md in meta_data:
                 um_file.write((u'%s\t%s\n' % (uid, u' '.join(md.split()))).encode('utf-8'))
