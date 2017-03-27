@@ -74,7 +74,7 @@ def get_all_meta_content(urls_ts, count, timeout=None):
             meta_info = get_meta_content(response._content)
             if meta_info:
                 out.extend(meta_info)
-                print "%s:\tGot meta\t%s" % (count, urls[i])
+                print "%s\tGot meta\t%s" % (count, urls[i])
             else:
                 lost_urls.append((urls[i], 'empty_meta'))
                 print "%s\tEmpty meta\t%s" % (count, urls[i])
