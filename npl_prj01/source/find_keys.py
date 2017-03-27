@@ -60,7 +60,7 @@ def get_all_meta_content(urls_ts, count, timeout=None):
     for url, timestamp in urls_ts:
         domain, url_scheme = url2domain(url)
         domain_url.extend([(domain, url, timestamp)])
-        new_url = '://'.join([url_scheme, domain])
+        new_url = '://'.join([url_scheme.decode('utf-8'), domain.decode('utf-8')])
         if not url in urls:
             urls.append(url)
         if not new_url in urls:
