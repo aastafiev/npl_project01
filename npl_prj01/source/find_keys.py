@@ -157,7 +157,7 @@ def parse_to_files(in_file_path,
 
             total_size += user_total_size
             now = datetime.now()
-            log('| i: %s | uid: %s | step duration: %s | delta from start: %s | size: %s | total size: %s |' % \
+            log('%s | uid: %s | step duration: %s | delta from start: %10s | size: %5s | total size: %6s' % \
                     (index,
                      uid,
                      delta2str(now - step_time),
@@ -174,10 +174,10 @@ def parse_to_files(in_file_path,
             for (url, err) in lost_urls:
                 lu_file.write((u'%s\t%s\t%s\n' % (uid, url, err)).encode('utf-8'))
 
-    log('* total duration: %s * total size: %s *' % \
+    log('total duration: %s, total size: %s' % \
             (delta2str(datetime.now() - start_time),
              size2str(user_total_size)),
-        _bounder='*'
+        _bounder='='
     )
 
 
