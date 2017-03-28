@@ -157,7 +157,7 @@ def parse_to_files(in_file_path,
 
             total_size += user_total_size
             now = datetime.now()
-            log('%s | uid: %s | step duration: %s | delta from start: %10s | size: %5s | total size: %6s' % \
+            log('% 5s | uid: %s | step duration: %s | delta from start: %10s | size: %5s | total size: %6s' % \
                     (index,
                      uid,
                      delta2str(now - step_time),
