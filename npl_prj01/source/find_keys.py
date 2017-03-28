@@ -144,7 +144,7 @@ def parse_to_files(in_file_path,
             open(lost_urls_file_path, 'w') as lu_file, \
             open(domain_urls_timestamp_file_path, 'w') as dut_file:
         count = 0
-        for _, uid, user_json in df.itertuples():
+        for index, uid, user_json in df.itertuples():
             user_json = json.loads(user_json)
             urls_ts = [(v['url'], v['timestamp']) for v in user_json['visits']]
             step_time = datetime.now()
@@ -157,8 +157,9 @@ def parse_to_files(in_file_path,
 
             total_size += user_total_size
             now = datetime.now()
-            log('%s | step duration: %s, delta from start: %s, size: %s, total size: %s' % \
-                    (uid,
+            log('| i: %s | uid: %s | step duration: %s | delta from start: %s | size: %s | total size: %s |' % \
+                    (index,
+                     uid,
                      delta2str(now - step_time),
                      delta2str(now - start_time),
                      size2str(user_total_size),
@@ -173,10 +174,10 @@ def parse_to_files(in_file_path,
             for (url, err) in lost_urls:
                 lu_file.write((u'%s\t%s\t%s\n' % (uid, url, err)).encode('utf-8'))
 
-    log('total duration: %s, total size: %s' % \
+    log('* total duration: %s * total size: %s *' % \
             (delta2str(datetime.now() - start_time),
              size2str(user_total_size)),
-        _bounder='='
+        _bounder='*'
     )
 
 
