@@ -145,8 +145,6 @@ def parse_to_files(in_file_path,
             open(domain_urls_timestamp_file_path, 'w') as dut_file:
         count = 0
         for _, uid, user_json in df.itertuples():
-            log("User %s" % uid, _bounder='*')
-
             user_json = json.loads(user_json)
             urls_ts = [(v['url'], v['timestamp']) for v in user_json['visits']]
             step_time = datetime.now()
@@ -159,8 +157,9 @@ def parse_to_files(in_file_path,
 
             total_size += user_total_size
             now = datetime.now()
-            log('step duration: %s, delta from start: %s, size: %s, total size: %s' % \
-                    (delta2str(now - step_time),
+            log('%s | step duration: %s, delta from start: %s, size: %s, total size: %s' % \
+                    (uid,
+                     delta2str(now - step_time),
                      delta2str(now - start_time),
                      size2str(user_total_size),
                      size2str(total_size)),
