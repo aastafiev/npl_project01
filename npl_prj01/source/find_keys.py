@@ -31,7 +31,7 @@ META_NAMES = ['description',
               'og:title',
               'twitter:title']
 
-log_file = None
+log_file = sys.stdout
 
 
 def log(msg, _bounder=None):
@@ -40,7 +40,8 @@ def log(msg, _bounder=None):
     msg += '\n'
     if log_file:
         log_file.write(msg.encode('utf-8'))
-    sys.stdout.write(msg.encode('utf-8'))
+        log_file.flush()
+    # sys.stdout.write(msg.encode('utf-8'))
 
 
 def delta2str(delta):
@@ -129,12 +130,13 @@ def parse_to_files(in_file_path,
                    lost_urls_file_path,
                    requests_count=128,
                    timeout=None,
+                   skiprows=0,
                    nrows=None):
     df = pd.read_csv(in_file_path,
                      encoding='utf-8',
                      sep='\t',
                      skipinitialspace=True,
-                     usecols=['uid', 'user_json'],
+                     skiprows=skiprows,
                      nrows=nrows,
     )
     start_time = datetime.now()
@@ -144,7 +146,7 @@ def parse_to_files(in_file_path,
             open(lost_urls_file_path, 'w') as lu_file, \
             open(domain_urls_timestamp_file_path, 'w') as dut_file:
         count = 0
-        for index, uid, user_json in df.itertuples():
+        for index, _, _, uid, user_json in df.itertuples():
             user_json = json.loads(user_json)
             urls_ts = [(v['url'], v['timestamp']) for v in user_json['visits']]
             step_time = datetime.now()
@@ -158,7 +160,7 @@ def parse_to_files(in_file_path,
             total_size += user_total_size
             now = datetime.now()
             log('% 5s | uid: %s | step duration: %s | delta from start: %10s | size: %5s | total size: %6s' % \
-                    (index,
+                    (skiprows + index,
                      uid,
                      delta2str(now - step_time),
                      delta2str(now - start_time),
@@ -187,21 +189,26 @@ if __name__ == "__main__":
                             default='gender_age_dataset.txt',
                             help='input file path')
     arg_parser.add_argument('--meta-file-path',
-                            default='uid_meta.txt',
+                            default='uid_meta.',
                             help='meta file path')
     arg_parser.add_argument('--lost-urls-file-path',
-                            default='uid_lost_url.txt',
+                            default='uid_lost_url.csv',
                             help='lost urls file path')
     arg_parser.add_argument('--domain-urls-timestamp-file-path',
-                            default='uid_domain_url_timestamp.txt',
+                            default='uid_domain_url_timestamp.csv',
                             help='domain urls timestamp file path')
     arg_parser.add_argument('--log-file',
                             default=None,
                             help='log file')
+    arg_parser.add_argument('--skiprows',
+                            type=int,
+                            default=0,
+                            help='line numbers to skip (0-indexed) or number of lines '\
+                                 'to skip (int) at the start of the file')
     arg_parser.add_argument('--nrows',
                             type=int,
                             default=None,
-                            help='rows count to get from in file')
+                            help='number of rows of file to read')
     arg_parser.add_argument('--requests-count',
                             type=int,
                             default=128,
