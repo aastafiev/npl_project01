@@ -183,7 +183,7 @@ def parse_to_files(in_file_path,
     )
 
 
-if __name__ == "__main__":
+def main():
     arg_parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter)
     arg_parser.add_argument('--in-file-path',
                             default='gender_age_dataset.txt',
@@ -224,3 +224,7 @@ if __name__ == "__main__":
     del args.log_file
 
     parse_to_files(**args.__dict__)
+
+
+if __name__ == "__main__":
+    main()
