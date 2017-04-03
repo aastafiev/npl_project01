@@ -143,7 +143,7 @@ def main(gen_file_path, in_file_path):
     # x_train = x_train.toarray()
     # ch2 = SelectKBest(chi2, k=10)
     # X_train = ch2.fit_transform(x_train)
-    clf = RandomForestClassifier(n_estimators=100)
+    clf = RandomForestClassifier(n_estimators=10, n_jobs=-1)
     print '_' * 80
     print "Training: "
     print "RandomForestClassifier"
@@ -165,6 +165,9 @@ def main(gen_file_path, in_file_path):
     print "classification report:"
     # print uids_test[0]
     print metrics.classification_report(y_test, pred) # , target_names=uids_test
+
+    print "confusion matrix:"
+    print metrics.confusion_matrix(y_test, pred)
 
     # dtm = vectorizer.fit_transform(raw_meta)
     # vocab = np.array(vectorizer.get_feature_names())
