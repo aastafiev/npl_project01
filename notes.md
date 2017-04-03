@@ -67,4 +67,14 @@ TODO: Давайте поштормим на предмет идей как об
 Надо штормить
 
 
-Инфа долго вытаскивается, поэетому пушу и на ночь запущу посмотреть, что на всех данных выйдет (запуск parse_to_files()).
+Запуск:
+
+seq -w 10000 1000 40000 | xargs -n1 -P8 -I SKIPROWS python find_keys.py \
+    --timeout=60 \
+    --skiprows=SKIPROWS \
+    --nrows=1000 \
+    --meta-file-path=csv/uid_meta_SKIPROWS_1000.csv \
+    --lost-urls-file-path=csv/uid_lost_url_SKIPROWS_1000.csv \
+    --domain-urls-timestamp-file-path=csv/uid_domain_url_timestamp_SKIPROWS_1000.csv \
+    --log-file=log/find_keys_SKIPROWS_1000.log
+
