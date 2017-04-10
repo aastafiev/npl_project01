@@ -19,6 +19,7 @@ from nltk.stem import WordNetLemmatizer
 from sklearn.feature_selection import SelectKBest
 from sklearn.feature_selection import chi2
 
+
 # import matplotlib.pyplot as plt
 # from sklearn.manifold import MDS
 # from sklearn.metrics.pairwise import cosine_similarity
@@ -45,14 +46,14 @@ def prepare_dfs(gen_file_path, in_file_path, feature):
 
     print "Preparing Train DataFrame"
     meta_train_df = pd.merge(meta_df, gen_train_df, on='uid', sort=False)
-    meta_train_series = meta_train_df.groupby(feature)['meta']\
+    meta_train_series = meta_train_df.groupby(feature)['meta'] \
         .apply(lambda x: u' '.join([unicode(ss).replace('&nbsp', ' ').replace('&quot', '"')
                                    .replace('&laquo', '"').replace('&raquo', '"') for ss in x.tolist()]))
     meta_train_df = pd.DataFrame(meta_train_series, index=meta_train_series.index, columns=['meta'])
 
     print "Preparing Test DataFrame"
     meta_test_df = meta_df[meta_df['uid'].isin(gen_test_df_uids.tolist())]
-    meta_test_series = meta_test_df.groupby('uid')['meta']\
+    meta_test_series = meta_test_df.groupby('uid')['meta'] \
         .apply(lambda x: u' '.join([unicode(ss).replace('&nbsp', ' ').replace('&quot', '"')
                                    .replace('&laquo', '"').replace('&raquo', '"') for ss in x.tolist()]))
     meta_test_df = pd.DataFrame(meta_test_series, index=meta_test_series.index, columns=['meta'])
@@ -67,12 +68,12 @@ class LemmaTokenizer(object):
         self.morph = pymorphy2.MorphAnalyzer()
 
     def __call__(self, text):
-        tokenz = TfidfVectorizer().build_tokenizer()(text)
+        tokenz = TfidfVectorizer(ngram_range=(1, 2)).build_tokenizer()(text)
         lemmas = []
         for t in tokenz:
             if len(t) > 2:
                 p = self.morph.parse(t)
-                if 'LATN' in p[0].tag: # and re.search('!\d+', p[0].normal_form)
+                if 'LATN' in p[0].tag:  # and re.search('!\d+', p[0].normal_form)
                     lemmas.append(self.wnl.lemmatize(t))
                 elif 'NUMB' in p[0].tag:
                     continue
@@ -93,8 +94,9 @@ def vectorizing(meta_train_df, meta_test_df):
 
     y_train = meta_train_df.index.values
     corpus_train = meta_train_df['meta'].tolist()
-    stop_words = stopwords.words('english') + stopwords.words('russian') + ['ru', 'com']
-    vectorizer = TfidfVectorizer(tokenizer=LemmaTokenizer(), stop_words=stop_words)  # ngram_range=(1, 2)
+    stop_words = stopwords.words('english') + stopwords.words('russian') + ['www', 'com', 'ru']
+    vectorizer = TfidfVectorizer(tokenizer=LemmaTokenizer(), stop_words=stop_words,
+                                 ngram_range=(1, 3), max_features=15000)  # ngram_range=(1, 2)
     x_train = vectorizer.fit_transform(corpus_train)
     feature_names = np.asarray(vectorizer.get_feature_names())
 
@@ -118,11 +120,11 @@ def vectorizing(meta_train_df, meta_test_df):
     print "vectorizing test time: %0.3fs" % command_time
     # x_test = ch2.transform(x_test)
 
-    # Print out x_train, x_test
-    print x_train.toarray()
+    # Print some info x_train, x_test
+    # print x_train.toarray()
     print x_train.shape
 
-    print x_test.toarray()
+    # print x_test.toarray()
     print x_test.shape
 
     return x_train, y_train, x_test, y_test, feature_names
@@ -142,6 +144,7 @@ def predicting(clf, clf_name, x_train, y_train, x_test, y_test):
     t0 = time()
     pred = clf.predict(x_test)
     test_time = time() - t0
+    print pred
     print "test time:  %0.3fs" % test_time
 
     score = metrics.accuracy_score(y_test, pred)
@@ -157,6 +160,7 @@ def predicting(clf, clf_name, x_train, y_train, x_test, y_test):
 
 
 def main(gen_file_path, in_file_path, feature):
+    # Preparing data info
     print '_' * 80
     print "Cooking data for feature '%s'" % feature
     t0 = time()
@@ -165,23 +169,15 @@ def main(gen_file_path, in_file_path, feature):
 
     command_time = time() - t0
     print "cooking data time: %0.3fs" % command_time
-# Print out prepared data info
-#     print u'len(gen_train_df) = %d\nlen(gen_test_df) = %d\nlen(meta_train_df) = %d\n' \
-#           u'len(meta_test_df) = %d\nlen(tmeta_train_df) = %d\nlen(tmeta_test_df) = %d' % \
-#           (len(gen_train_df),
-#            len(gen_test_df),
-#            len(meta_train_df),
-#            len(meta_test_df),
-#            len(tmeta_train_df),
-#            len(tmeta_test_df))
 
-# Vectorizing
+    # Vectorizing
     x_train, y_train, x_test, y_test, feature_names = vectorizing(meta_train_df, meta_test_df)
 
-# Classification
-#     clf = RandomForestClassifier(n_estimators=10, n_jobs=-1)
-    clf = MultinomialNB(alpha=.01) # BernoulliNB(alpha=.01)
+    # Classification
+    #     clf = RandomForestClassifier(n_estimators=10, n_jobs=-1)
+    clf = MultinomialNB(alpha=.01)  # BernoulliNB(alpha=.01)
     predicting(clf, 'MultinomialNB', x_train, y_train, x_test, y_test)
+
 
 if __name__ == "__main__":
     main('/Users/usual/PycharmProjects/npl_project01/data/gender_age_dataset.txt',
