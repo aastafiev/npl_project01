@@ -185,7 +185,7 @@ def f_pred(clf, clf_name, x_train, y_train, x_test):
     pred = clf.predict_proba(x_test)
     test_time = time() - t0
     print "predicting time:  %0.3fs" % test_time
-    print "Predicting length: %d" % len(pred)
+    # print "Predicting length: %d" % len(pred)
 
     return pred
 
@@ -244,11 +244,16 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
     # pickle.dump(X_test, open('/Users/usual/PycharmProjects/npl_project01/data/X_test.pckl', 'w'), protocol=-1)
 
     # Classification
-    clf_name = 'RandomForestClassifier'
-    clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=10)
+    # clf_name = 'RandomForestClassifier'
+    # clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=4)
+    clf_name = 'GradientBoostingClassifier'
+    clf = GradientBoostingClassifier(n_estimators=n_estimators, n_jobs=5)
     # clf = GradientBoostingClassifier(n_estimators=1000)
+    print '_' * 80
     print "Predict for 'age'"
     prd_age = f_pred(clf, clf_name, X_train_a, y_train_a, X_test_a)
+
+    print '_' * 80
     print "Predict for 'gender'"
     prd_gender = f_pred(clf, clf_name, X_train_g, y_train_g, X_test_g)
 
@@ -256,25 +261,40 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
 
 
 if __name__ == "__main__":
-    gen_file_path = '/Users/usual/PycharmProjects/npl_project01/data/gender_age_dataset.txt'
-    in_file_path = '/Users/usual/PycharmProjects/npl_project01/data/csv/uid_meta_fixed.csv'
-    project01_gender_age_file_path = '/Users/usual/PycharmProjects/npl_project01/data/csv/project01_gender-age.csv'
-    project01_gender_age_dom_file_path = '/Users/usual/PycharmProjects/npl_project01/data/csv/project01_gender-age_dom.csv'
+    gen_file_path = '../data/gender_age_dataset.txt'
+    in_file_path = '../data/csv/uid_meta_fixed.csv'
+    project01_gender_age_file_path = '../data/csv/project01_gender-age.csv'
+    project01_gender_age_dom_file_path = '../data/csv/project01_gender-age_dom.csv'
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
-                                                                             max_features=10000)
+                                                                             max_features=20000)
 
     pred_for_test_age = [target_names_a[1][i.argmax()] for i in predict_age]
     pred_for_test_gender = [target_names_g[1][i.argmax()] for i in predict_gender]
 
     sum_pred = pd.DataFrame({'gender': pred_for_test_gender, 'age': pred_for_test_age}, index=uids)
     sum_pred = sum_pred.sort_index()
-    sum_pred.to_csv(project01_gender_age_file_path, sep='\t')
-    print "File ready %s" % project01_gender_age_file_path
+    sum_pred['uid'] = sum_pred.index.values
+    # sum_pred.to_csv(project01_gender_age_file_path, sep='\t')
 
-    # gen_df = pd.read_csv(project01_gender_age_dom_file_path,
-    #                      encoding='utf-8',
-    #                      sep='\t',
-    #                      skipinitialspace=True,
-    #                      # usecols=['gender', 'age', 'uid']
-    #                      )
+    print "Fill missed uids"
+    df_v = pd.read_csv(project01_gender_age_dom_file_path,
+                       encoding='utf-8',
+                       sep='\t')
+
+    a_df = pd.merge(df_v, sum_pred, on='uid', how='left')
+    a_df['age_y'].fillna(a_df['age_x'], inplace=True)
+    a_df['gender_y'].fillna(a_df['gender_x'], inplace=True)
+
+    # a_df['diff_gender'] = a_df['gender_x'] == a_df['gender_y']
+    # a_df['diff_age'] = a_df['age_x'] == a_df['age_y']
+
+    res_df = a_df.loc[:, ('uid', 'age_y', 'gender_y')]
+    res_df['age'] = res_df['age_y']
+    res_df['gender'] = res_df['gender_y']
+    res_df.index = res_df['uid']
+    res_df = res_df.drop(['gender_y', 'age_y', 'uid'], axis=1)
+
+    res_df.to_csv(project01_gender_age_file_path, sep='\t')
+
+    print "File ready %s" % project01_gender_age_file_path
