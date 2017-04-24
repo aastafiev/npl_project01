@@ -260,7 +260,7 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
 
 
 if __name__ == "__main__":
-    gen_file_path = '../data/gender_age_dataset1.txt'
+    gen_file_path = '../data/gender_age_dataset.txt'
     in_file_path = '../data/csv/uid_meta_fixed.csv'
     project01_gender_age_file_path = '../data/csv/project01_gender-age.csv'
     project01_gender_age_pred_dom_file_path = '../data/csv/project01_gender-age_pred_dom.csv'
