@@ -244,10 +244,10 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
     # pickle.dump(X_test, open('/Users/usual/PycharmProjects/npl_project01/data/X_test.pckl', 'w'), protocol=-1)
 
     # Classification
-    # clf_name = 'RandomForestClassifier'
-    # clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=4)
-    clf_name = 'GradientBoostingClassifier'
-    clf = GradientBoostingClassifier(n_estimators=n_estimators)
+    clf_name = 'RandomForestClassifier'
+    clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=5)
+    # clf_name = 'GradientBoostingClassifier'
+    # clf = GradientBoostingClassifier(n_estimators=n_estimators)
     print '_' * 80
     print "Predict for 'age'"
     prd_age = f_pred(clf, clf_name, X_train_a, y_train_a, X_test_a)
@@ -263,6 +263,7 @@ if __name__ == "__main__":
     gen_file_path = '../data/gender_age_dataset.txt'
     in_file_path = '../data/csv/uid_meta_fixed.csv'
     project01_gender_age_file_path = '../data/csv/project01_gender-age.csv'
+    project01_gender_age_pred_file_path = '../data/csv/project01_gender-age_pred.csv'
     project01_gender_age_pred_dom_file_path = '../data/csv/project01_gender-age_pred_dom.csv'
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
@@ -313,8 +314,9 @@ if __name__ == "__main__":
 
     a_df['gender'] = a_df['gender_max'].apply(f_gender)
     a_df['age'] = a_df['age_max'].apply(f_age)
+    a_df.to_csv(project01_gender_age_pred_file_path, sep='\t')
 
-    res_df = a_df.loc[:, ('uid', 'age', 'gender')]
+    res_df = a_df.loc[:, ('uid', 'gender', 'age')]
     res_df.index = res_df['uid']
     res_df = res_df.drop('uid', axis=1)
     res_df.sort_index(inplace=True)
