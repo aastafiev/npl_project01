@@ -172,19 +172,19 @@ def vectorizing(meta_train_df, meta_test_df, max_features=20):
 
 def f_pred(clf, clf_name, x_train, y_train, x_test):
     # clf = MultinomialNB(alpha=.01)  # BernoulliNB(alpha=.01)
-    print '_' * 80
-    print "%s" % clf_name
-    print "Training:"
+    # print '_' * 80
+    print "\t%s" % clf_name
+    print "\tTraining:"
     t0 = time()
     clf.fit(x_train, y_train)
     train_time = time() - t0
-    print "train time: %0.3fs" % train_time
+    print "\ttrain time: %0.3fs" % train_time
 
-    print "Predicting: "
+    print "\tPredicting: "
     t0 = time()
     pred = clf.predict_proba(x_test)
     test_time = time() - t0
-    print "predicting time:  %0.3fs" % test_time
+    print "\tpredicting time:  %0.3fs" % test_time
     # print "Predicting length: %d" % len(pred)
 
     return pred
@@ -247,8 +247,7 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
     # clf_name = 'RandomForestClassifier'
     # clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=4)
     clf_name = 'GradientBoostingClassifier'
-    clf = GradientBoostingClassifier(n_estimators=n_estimators, n_jobs=5)
-    # clf = GradientBoostingClassifier(n_estimators=1000)
+    clf = GradientBoostingClassifier(n_estimators=n_estimators)
     print '_' * 80
     print "Predict for 'age'"
     prd_age = f_pred(clf, clf_name, X_train_a, y_train_a, X_test_a)
@@ -261,40 +260,63 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
 
 
 if __name__ == "__main__":
-    gen_file_path = '../data/gender_age_dataset.txt'
+    gen_file_path = '../data/gender_age_dataset1.txt'
     in_file_path = '../data/csv/uid_meta_fixed.csv'
     project01_gender_age_file_path = '../data/csv/project01_gender-age.csv'
-    project01_gender_age_dom_file_path = '../data/csv/project01_gender-age_dom.csv'
+    project01_gender_age_pred_dom_file_path = '../data/csv/project01_gender-age_pred_dom.csv'
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
                                                                              max_features=20000)
 
-    pred_for_test_age = [target_names_a[1][i.argmax()] for i in predict_age]
-    pred_for_test_gender = [target_names_g[1][i.argmax()] for i in predict_gender]
+    print '_' * 80
+    print "Preparing predicted data from voting"
+    df_pred_age = pd.DataFrame(predict_age, index=uids, columns=target_names_a[1].values.tolist())
+    df_pred_gender = pd.DataFrame(predict_gender, index=uids, columns=target_names_g[1].values.tolist())
+    df_my = pd.merge(df_pred_gender, df_pred_age, left_index=True, right_index=True)
+    df_my['uid'] = df_my.index.values
 
-    sum_pred = pd.DataFrame({'gender': pred_for_test_gender, 'age': pred_for_test_age}, index=uids)
-    sum_pred = sum_pred.sort_index()
-    sum_pred['uid'] = sum_pred.index.values
-    # sum_pred.to_csv(project01_gender_age_file_path, sep='\t')
+    df_v = pd.read_csv(project01_gender_age_pred_dom_file_path, encoding='utf-8', sep='\t')
 
-    print "Fill missed uids"
-    df_v = pd.read_csv(project01_gender_age_dom_file_path,
-                       encoding='utf-8',
-                       sep='\t')
+    a_df = pd.merge(df_v, df_my, on='uid', how='left')
+    a_df['F'].fillna(a_df['gender_0'], inplace=True)
+    a_df['M'].fillna(a_df['gender_1'], inplace=True)
+    a_df['18-24'].fillna(a_df['age_0'], inplace=True)
+    a_df['25-34'].fillna(a_df['age_1'], inplace=True)
+    a_df['>=55'].fillna(a_df['age_2'], inplace=True)
+    a_df['45-54'].fillna(a_df['age_3'], inplace=True)
+    a_df['35-44'].fillna(a_df['age_4'], inplace=True)
+    a_df['gender_max'] = a_df[['gender_0', 'gender_1', 'F', 'M']].idxmax(axis=1)
+    a_df['age_max'] = a_df[['age_0', 'age_1', 'age_2', 'age_3', '18-24', '25-34', '>=55', '45-54', '35-44']].idxmax(
+        axis=1)
 
-    a_df = pd.merge(df_v, sum_pred, on='uid', how='left')
-    a_df['age_y'].fillna(a_df['age_x'], inplace=True)
-    a_df['gender_y'].fillna(a_df['gender_x'], inplace=True)
+    def f_gender(x):
+        if x == 'gender_1':
+            return 'M'
+        elif x == 'gender_0':
+            return 'F'
+        else:
+            return x
 
-    # a_df['diff_gender'] = a_df['gender_x'] == a_df['gender_y']
-    # a_df['diff_age'] = a_df['age_x'] == a_df['age_y']
+    def f_age(x):
+        if x == 'age_0':
+            return '18-24'
+        elif x == 'age_1':
+            return '25-34'
+        elif x == 'age_2':
+            return '>=55'
+        elif x == 'age_3':
+            return '45-54'
+        elif x == 'age_4':
+            return '35-44'
+        else:
+            return x
 
-    res_df = a_df.loc[:, ('uid', 'age_y', 'gender_y')]
-    res_df['age'] = res_df['age_y']
-    res_df['gender'] = res_df['gender_y']
+    a_df['gender'] = a_df['gender_max'].apply(f_gender)
+    a_df['age'] = a_df['age_max'].apply(f_age)
+
+    res_df = a_df.loc[:, ('uid', 'age', 'gender')]
     res_df.index = res_df['uid']
-    res_df = res_df.drop(['gender_y', 'age_y', 'uid'], axis=1)
-
+    res_df = res_df.drop('uid', axis=1)
+    res_df.sort_index(inplace=True)
     res_df.to_csv(project01_gender_age_file_path, sep='\t')
-
     print "File ready %s" % project01_gender_age_file_path
