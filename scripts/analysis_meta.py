@@ -267,7 +267,8 @@ if __name__ == "__main__":
     project01_gender_age_pred_dom_file_path = '../data/csv/project01_gender-age_pred_dom.csv'
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
-                                                                             max_features=20000)
+                                                                             n_estimators=10000,
+                                                                             max_features=40000)
 
     print '_' * 80
     print "Preparing predicted data from voting"
