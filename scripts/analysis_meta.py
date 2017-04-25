@@ -268,7 +268,7 @@ if __name__ == "__main__":
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
                                                                              n_estimators=10000,
-                                                                             max_features=40000)
+                                                                             max_features=30000)
 
     print '_' * 80
     print "Preparing predicted data from voting"
