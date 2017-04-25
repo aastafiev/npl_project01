@@ -65,13 +65,16 @@ def prepare_dfs(gen_file_path, in_file_path, feature):
 
 
 # def prepare_dfs_new(gen_file_path, in_file_path, feature):
-def prepare_dfs_new(gen_df, meta_df, feature):
+def prepare_dfs_new(gen_df, meta_df, feature, limit=False):
     print '_' * 80
     print "Cooking data for feature '%s'" % feature
     t0 = time()
 
     gen_train_df = gen_df[~((gen_df['gender'] == '-') & (gen_df['age'] == '-'))]
     gen_test_df = gen_df[(gen_df['gender'] == '-') & (gen_df['age'] == '-')]
+    if limit:
+        lim = gen_test_df.shape[0]/2
+        gen_test_df = gen_test_df[:lim]
     # gen_test_df_uids = gen_test_df['uid'].unique()
 
     feature_fac_name = 'gender' if feature == 'age' else 'age'
@@ -190,7 +193,7 @@ def f_pred(clf, clf_name, x_train, y_train, x_test):
     return pred
 
 
-def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
+def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000, limit=False):
     print "Load to DataFrame gen_file_path"
     gen_df = pd.read_csv(gen_file_path,
                          encoding='utf-8',
@@ -209,11 +212,11 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
     # Preparing data info
     meta_train_df_a, uids_train_a, meta_test_df_a, uids_test_a, \
         target_names_features_a, feature_fac_a, feature_fac_name_a = \
-        prepare_dfs_new(gen_df, meta_df, 'age')
+        prepare_dfs_new(gen_df, meta_df, 'age', limit)
 
     meta_train_df_g, uids_train_g, meta_test_df_g, uids_test_g,\
         target_names_features_g, feature_fac_g, feature_fac_name_g = \
-        prepare_dfs_new(gen_df, meta_df, 'gender')
+        prepare_dfs_new(gen_df, meta_df, 'gender', limit)
 
     # Vectorizing
     X_train, X_test = vectorizing(meta_train_df_a, meta_test_df_a, max_features)
@@ -245,7 +248,7 @@ def main(gen_file_path, in_file_path, n_estimators=2000, max_features=8000):
 
     # Classification
     clf_name = 'RandomForestClassifier'
-    clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=5)
+    clf = RandomForestClassifier(n_estimators=n_estimators, n_jobs=8)
     # clf_name = 'GradientBoostingClassifier'
     # clf = GradientBoostingClassifier(n_estimators=n_estimators)
     print '_' * 80
@@ -268,7 +271,8 @@ if __name__ == "__main__":
 
     predict_age, predict_gender, uids, target_names_a, target_names_g = main(gen_file_path, in_file_path,
                                                                              n_estimators=10000,
-                                                                             max_features=30000)
+                                                                             max_features=25000,
+                                                                             limit=True)
 
     print '_' * 80
     print "Preparing predicted data from voting"
