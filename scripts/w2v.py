@@ -8,7 +8,7 @@ import urllib
 import json
 import re
 import os
-
+import analysis_meta
 
 from tqdm import tqdm
 from gensim.models import Word2Vec
@@ -156,29 +156,29 @@ w2v = create_w2v(df.domains,
                  downsampling=downsampling,
                  seed=1)
 
-log("Creating average feature vecs for training reviews")
+log("Creating average feature vecs for training domains")
 train_data_vecs = get_avg_feature_vecs(train_df.domains, w2v, num_features)
 
-log("Creating average feature vecs for test reviews")
+log("Creating average feature vecs for test domains")
 test_data_vecs = get_avg_feature_vecs(test_df.domains, w2v, num_features)
 
 rfc = RandomForestClassifier(n_estimators=1000, n_jobs=40)
 
 log("Fitting a random forest to age training data...")
 rfc.fit(train_data_vecs, train_df.age)
-age_predict = rfc.predict_proba(test_data_vecs)
+ap = rfc.predict_proba(test_data_vecs)
+ap_df = pd.DataFrame(ap, columns=rfc.classes_)
+ap_df['uid'] = test_df.uid.tolist()
 
 log("Fitting a random forest to gender training data...")
 rfc.fit(train_data_vecs, train_df.gender)
-gender_predict = rfc.predict_proba(test_data_vecs)
+gp = rfc.predict_proba(test_data_vecs)
+gp_df = pd.DataFrame(gp, columns=rfc.classes_)
+gp_df['uid'] = test_df.uid.tolist()
 
-test_df.gender = gender_predict
-test_df.age = age_predict
+r_df = pd.merge(ap_df, gp_df, on='uid', sort=False)
 
-test_df.sort('uid', axis=0, inplace=True)
-
-test_df.to_csv(os.path.join(os.getcwd(),
-                            'project01_gender-age_pred_w2v.csv'),
-               sep='\t',
-               index=False,
-               columns=['uid', 'gender_p', 'age_p'])
+r_df.to_csv(os.path.join(os.getcwd(),
+                         'project01_gender-age_pred_w2v.csv'),
+            sep='\t',
+            index=False)
